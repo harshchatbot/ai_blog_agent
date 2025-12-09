@@ -1,0 +1,11 @@
+crewai
+crewai-tools
+openai
+langchain
+langchain-community
+python-dotenv
+requests
+chromadb
+fastapi
+uvicorn[standard]
+pydantic

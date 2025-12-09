@@ -1,0 +1,68 @@
+# ----------------------------
+# Python
+# ----------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+venv/
+.env
+.env.*
+*.env
+
+# ----------------------------
+# Logs
+# ----------------------------
+*.log
+logs/
+*.out
+*.err
+
+# ----------------------------
+# IDE / Editor
+# ----------------------------
+.vscode/
+.idea/
+*.swp
+
+# ----------------------------
+# OS / System Files
+# ----------------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------------
+# Project-specific
+# ----------------------------
+
+# ChromaDB vector database
+data/vector_db/
+data/chroma/
+*.chroma
+
+# Cache folders
+.cache/
+crewai_cache/
+__crewai_tmp__/
+
+# CrewAI temp artifacts
+crewai_output/
+crewai_runs/
+*.crew
+
+# Uploaded images (if any)
+uploads/
+
+# Secrets
+config/settings_local.py
+.credentials/
+
+# Jupyter (if used)
+.ipynb_checkpoints/
