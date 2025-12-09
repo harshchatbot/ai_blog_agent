@@ -26,6 +26,45 @@ INTERNAL_LINKS = [
     }
 ]
 
+
+
+import time
+import threading
+
+# OpenAI allows 3 requests per minute on your plan
+MAX_REQUESTS_PER_MIN = 3
+REQUEST_WINDOW = 60  # seconds
+
+request_count = 0
+window_start_time = time.time()
+lock = threading.Lock()
+
+def wait_for_rate_limit():
+    global request_count, window_start_time
+
+    with lock:
+        current_time = time.time()
+        elapsed = current_time - window_start_time
+
+        # If 60 sec window passed → reset counter
+        if elapsed >= REQUEST_WINDOW:
+            window_start_time = current_time
+            request_count = 0
+
+        # If limit reached → wait until new window
+        if request_count >= MAX_REQUESTS_PER_MIN:
+            sleep_time = REQUEST_WINDOW - elapsed
+            print(f"⏳ Rate limit: sleeping {sleep_time:.1f}s to avoid 429...")
+            time.sleep(sleep_time)
+            window_start_time = time.time()
+            request_count = 0
+
+        request_count += 1
+
+
+
+
+
 # ✅ EDIT THESE TWO VALUES FOR EACH NEW ARTICLE
 TOPIC = "Salesforce Agentforce Use Cases"
 MAIN_KEYWORD = "Salesforce Agentforce"
@@ -142,6 +181,7 @@ def generate_and_save_article(topic: str, main_keyword: str) -> Path:
         verbose=True,
     )
 
+    wait_for_rate_limit()
     result = crew.kickoff(inputs={"topic": topic, "main_keyword": main_keyword})
 
     print("\n🧩 Raw SEO agent result obtained. Parsing JSON...\n")
