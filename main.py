@@ -7,6 +7,26 @@ from agents.visual_artist import visual_artist
 from tools.search_tools import web_search
 from tools.cms_tools import post_to_wordpress
 
+INTERNAL_LINKS = [
+    {
+        "title": "Salesforce Health Cloud Explained Simply",
+        "url": "https://thetechnologyfiction.com/blog/salesforce-health-cloud-explained-simply/",
+        "anchor": "Salesforce Health Cloud explained simply"
+    },
+    {
+        "title": "Beginner’s Guide to Salesforce Flow",
+        "url": "https://thetechnologyfiction.com/blog/salesforce-flow-beginners-guide/",
+        "anchor": "Salesforce Flow beginner’s guide"
+    },
+    {
+        "title": "Salesforce OmniStudio (Vlocity) Explained With Use Cases",
+        "url": "https://thetechnologyfiction.com/blog/salesforce-omnistudio-use-cases/",
+        "anchor": "Salesforce OmniStudio use cases"
+    }
+    # add more as you create new posts
+]
+
+
 
 def run_blog_pipeline(topic: str, main_keyword: str):
     print("🚀 Starting AI Blog Agent...\n")
@@ -24,24 +44,53 @@ def run_blog_pipeline(topic: str, main_keyword: str):
 
     # 2) WRITE: full SEO article
     write_task = Task(
-        description=(
-            "Using the outline, write a full SEO-optimized blog article in HTML.\n"
-            "Requirements:\n"
-            "- Include <h1> title at top.\n"
-            "- Use <h2> and <h3> for sections and sub-sections.\n"
-            f"- Main keyword: '{main_keyword}' (use it in title, intro, and at least one H2).\n"
-            "- Add bullet points and numbered lists where helpful.\n"
-            "- Add an FAQ section at the end with 4–6 Q&A.\n"
-            "- At the very end of your response, output a JSON block ONLY with:\n"
-            "  {\"title\": \"...\", \"slug\": \"...\", \"meta_description\": \"...\", \"content_html\": \"...\"}\n"
-            "  where content_html is the full HTML body as a single string.\n"
-        ),
-        agent=seo_optimiser,
-        expected_output=(
-            "A full HTML article plus a final JSON object with keys: "
-            "title, slug, meta_description, content_html."
-        )
-    )
+    description=dedent(f"""
+        Using the outline from the planner, write a full SEO-optimized blog article in clean HTML.
+
+        MAIN KEYWORD:
+        - '{main_keyword}' must appear in the title, introduction paragraph, and at least one <h2> header.
+
+        HTML STRUCTURE RULES:
+        - Start with a single <h1> at the top.
+        - Use <h2> for major sections and <h3> for subsections.
+        - Use <p>, <ul>, <ol>, and <strong> tags where appropriate.
+        - Include a properly formatted FAQ section with 4–6 Q&A items at the end.
+
+        BRAND & CONTACT RULES:
+        - If the article references contacting the company, always use the email: thetechfilabs@gmail.com
+        - Never invent any consulting company, email domain, or third-party contact details.
+        - Use the brand name "The Technology Fiction" or "TechFi Labs" when needed.
+
+        INTERNAL LINKING (VERY IMPORTANT):
+        - You MUST include 2–3 contextual internal links to the following articles:
+
+          {INTERNAL_LINKS}
+
+        - Insert these links naturally inside the article body.
+        - Format them using clickable <a href="URL" target="_blank" rel="noopener noreferrer">anchor text</a>.
+        - Do NOT include external links (like Salesforce docs) unless absolutely necessary.
+
+        OUTPUT FORMAT (STRICT):
+        After writing the full HTML article, output ONLY a final JSON block with this structure:
+
+        {{
+          "title": "<title>",
+          "slug": "<seo-friendly-slug>",
+          "meta_description": "<155-character SEO description>",
+          "content_html": "<FULL HTML CONTENT AS A SINGLE STRING>"
+        }}
+
+        VERY IMPORTANT:
+        - Outside the JSON, do NOT include explanations, notes, comments, markdown, or chat text.
+        - The JSON block must be valid and parsable as JSON.
+        - content_html must contain the complete HTML article, including internal links.
+    """),
+    agent=seo_optimiser,
+    expected_output=(
+        "A full HTML article PLUS a strict JSON block containing "
+        "title, slug, meta_description, content_html."
+    ),
+)
 
     # 3) IMAGE PROMPT (we'll use later)
     image_task = Task(
