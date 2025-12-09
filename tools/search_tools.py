@@ -1,4 +1,4 @@
-from crewai_tools import tool
+from crewai.tools import tool
 from tavily import TavilyClient
 from config.settings import settings
 

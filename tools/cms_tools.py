@@ -1,6 +1,6 @@
 import base64
 import requests
-from crewai_tools import tool
+from crewai.tools import tool
 from config.settings import settings
 
 @tool
