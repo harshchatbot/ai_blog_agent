@@ -9,19 +9,19 @@ from tools.cms_tools import post_to_wordpress
 
 INTERNAL_LINKS = [
     {
-        "title": "Salesforce Health Cloud Explained Simply",
-        "url": "https://thetechnologyfiction.com/blog/salesforce-health-cloud-explained-simply/",
-        "anchor": "Salesforce Health Cloud explained simply"
+        "title": "Apex Batch Class: The Ultimate Guide for Salesforce Developers (2025 Edition)",
+        "url": "https://thetechnologyfiction.com/blog/apex-batch-class-the-ultimate-guide-for-salesforce-developers-2025-edition/",
+        "anchor": "Salesforce Apex Batch Class beginner’s guide"
     },
     {
-        "title": "Beginner’s Guide to Salesforce Flow",
-        "url": "https://thetechnologyfiction.com/blog/salesforce-flow-beginners-guide/",
-        "anchor": "Salesforce Flow beginner’s guide"
+        "title": "Salesforce Vlocity (OmniStudio) Explained Simply With Use Cases",
+        "url": "https://thetechnologyfiction.com/blog/salesforce-vlocity-omnistudio-explained-simply-with-use-cases/",
+        "anchor": "Salesforce Omnistudio use cases"
     },
     {
-        "title": "Salesforce OmniStudio (Vlocity) Explained With Use Cases",
-        "url": "https://thetechnologyfiction.com/blog/salesforce-omnistudio-use-cases/",
-        "anchor": "Salesforce OmniStudio use cases"
+        "title": "Linear Search and Sorting Algorithm in Salesforce Using Apex | 2025",
+        "url": "https://thetechnologyfiction.com/blog/linear-search-and-sorting-algorithm-in-salesforce-using-apex-2025/",
+        "anchor": "Algorithm in Salesforce"
     }
     # add more as you create new posts
 ]
