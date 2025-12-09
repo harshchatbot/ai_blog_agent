@@ -1,0 +1,44 @@
+name: AI Blog Agent
+
+on:
+  # Manual trigger from GitHub UI
+  workflow_dispatch:
+
+  # Scheduled runs (cron uses UTC)
+  schedule:
+    # 10:00 AM IST = 4:30 AM UTC
+    - cron: "30 4 * * 2"   # Every Tuesday 10:00 IST
+    - cron: "30 4 * * 4"   # Every Thursday 10:00 IST
+
+jobs:
+  run-ai-blog-agent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run AI Blog Agent
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CHROMA_OPENAI_API_KEY: ${{ secrets.CHROMA_OPENAI_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          WP_BASE_URL: ${{ secrets.WP_BASE_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+          DEFAULT_CATEGORY_ID: ${{ secrets.DEFAULT_CATEGORY_ID }}
+          DEFAULT_AUTHOR_ID: ${{ secrets.DEFAULT_AUTHOR_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_IMAGE_MOCK: ${{ secrets.GEMINI_IMAGE_MOCK }}
+        run: |
+          python main.py
