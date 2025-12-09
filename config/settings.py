@@ -14,4 +14,8 @@ class Settings:
     DEFAULT_CATEGORY_ID = int(os.getenv("DEFAULT_CATEGORY_ID", 1))
     DEFAULT_AUTHOR_ID = int(os.getenv("DEFAULT_AUTHOR_ID", 1))
 
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    GEMINI_IMAGE_MODEL = os.getenv("GEMINI_IMAGE_MODEL", "gemini-2.5-flash-image")
+    GEMINI_IMAGE_MOCK = os.getenv("GEMINI_IMAGE_MOCK", "false").lower() == "true"
+
 settings = Settings()
