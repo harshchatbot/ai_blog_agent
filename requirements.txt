@@ -9,3 +9,4 @@ chromadb
 fastapi
 uvicorn[standard]
 pydantic
+tavily-python
