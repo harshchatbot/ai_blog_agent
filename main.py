@@ -15,6 +15,8 @@ from textwrap import dedent
 import time
 import threading
 
+from llm_metrics import metrics
+
 
 INTERNAL_LINKS = [
     {
@@ -45,6 +47,7 @@ REQUEST_WINDOW = 60  # seconds
 request_count = 0
 window_start_time = time.time()
 lock = threading.Lock()
+
 
 def wait_for_rate_limit():
     global request_count, window_start_time
@@ -171,6 +174,7 @@ def pick_salesforce_topic_for_today() -> tuple[str, str]:
     )
 
     wait_for_rate_limit()
+    metrics.register_call(label="Topic Scout")
     result = crew.kickoff()
 
     # Parse JSON from result
@@ -290,6 +294,7 @@ def run_blog_pipeline(topic: str, main_keyword: str):
     )
 
     wait_for_rate_limit()
+    metrics.register_call(label=f"Blog pipeline for topic '{topic}'")
     result = crew.kickoff(inputs={"topic": topic, "main_keyword": main_keyword})
 
     print("\n🎉 DONE! Final pipeline output:\n")
@@ -307,4 +312,8 @@ if __name__ == "__main__":
         topic=topic,
         main_keyword=main_keyword
     )
+
+    from llm_metrics import metrics
+    print("========== LLM METRICS ==========")
+    print(metrics.summary())
 
