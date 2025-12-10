@@ -2,6 +2,9 @@
 
 from crewai import Agent
 from tools.search_tools import web_search  # assuming you already created this tool
+from llm_factory import get_default_llm
+
+planner_llm = get_default_llm()
 
 topic_scout = Agent(
     role="Salesforce Topic Scout",
@@ -17,7 +20,7 @@ topic_scout = Agent(
         "(Agentforce, Data Cloud, Einstein, Hyperforce, OmniStudio). "
         "You balance trending/news topics with evergreen educational content."
     ),
-    llm="gpt-4.1-mini",
+    llm=planner_llm,
     tools=[web_search],
     verbose=True,
 )

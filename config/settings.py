@@ -18,4 +18,9 @@ class Settings:
     GEMINI_IMAGE_MODEL = os.getenv("GEMINI_IMAGE_MODEL", "gemini-2.5-flash-image")
     GEMINI_IMAGE_MOCK = os.getenv("GEMINI_IMAGE_MOCK", "false").lower() == "true"
 
+    # 🔀 LLM switching
+    USE_LOCAL_LLM: bool = os.getenv("USE_LOCAL_LLM", "false").lower() == "true"
+    LOCAL_LLM_MODEL: str = os.getenv("LOCAL_LLM_MODEL", "phi3:mini")
+    OPENAI_LLM_MODEL: str = os.getenv("OPENAI_LLM_MODEL", "gpt-4.1-mini")
+
 settings = Settings()

@@ -1,4 +1,7 @@
 from crewai import Agent
+from llm_factory import get_default_llm
+
+planner_llm = get_default_llm()
 
 content_planner = Agent(
     role="Content Planner",
@@ -9,5 +12,5 @@ content_planner = Agent(
     ),
     verbose=True,
     allow_delegation=True,
-    llm="gpt-4.1-mini"
+    llm=planner_llm
 )

@@ -1,4 +1,7 @@
 from crewai import Agent
+from llm_factory import get_default_llm
+
+planner_llm = get_default_llm()
 
 seo_optimiser = Agent(
     role="SEO Blog Writer",
@@ -8,6 +11,6 @@ seo_optimiser = Agent(
         "You ALWAYS use the brand 'The Technology Fiction' or 'TechFi Labs' when referring to the company. "
         "For any contact email, you MUST always use 'thetechfilabs@gmail.com' and never invent any other email."
     ),
-    llm="gpt-4.1-mini",
+    llm=planner_llm,
     verbose=True
 )
