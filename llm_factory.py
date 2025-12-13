@@ -24,3 +24,5 @@ def get_default_llm():
             model=settings.OPENAI_LLM_MODEL,     # e.g. "gpt-4.1-mini"
             api_key=settings.OPENAI_API_KEY      # from your .env / settings
         )
+
+

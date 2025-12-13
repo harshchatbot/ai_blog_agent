@@ -23,4 +23,7 @@ class Settings:
     LOCAL_LLM_MODEL: str = os.getenv("LOCAL_LLM_MODEL", "phi3:mini")
     OPENAI_LLM_MODEL: str = os.getenv("OPENAI_LLM_MODEL", "gpt-4.1-mini")
 
+    print("DEBUG USE_LOCAL_LLM:", os.getenv("USE_LOCAL_LLM"))
+
+
 settings = Settings()

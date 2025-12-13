@@ -18,7 +18,7 @@ import threading
 from llm_metrics import metrics
 
 from utils.sanitize_article_payload import sanitize_article_payload
-
+import re
 
 INTERNAL_LINKS = [
     {
@@ -185,34 +185,69 @@ def pick_salesforce_topic_for_today() -> tuple[str, str]:
     result = crew.kickoff()
 
     # Parse JSON from result
+
     text = str(result)
-    start = text.find("{")
-    end = text.rfind("}")
-    if start == -1 or end == -1 or end <= start:
-        print("\n⚠️ Topic Scout did not return a valid JSON object shape.")
-        print("Raw result text:", text)
-        # Fallback topic so pipeline can continue
-        fallback_topic = "Salesforce Flow Best Practices in 2025"
-        fallback_keyword = "Salesforce Flow best practices"
-        print(f"➡️ Falling back to topic: {fallback_topic}")
-        return fallback_topic, fallback_keyword
 
-    json_str = text[start: end + 1]
+    # 1️⃣ Try to extract JSON from a ```json ... ``` fenced block
+    json_str = None
+    fence_match = re.search(r"```json\s*(\{.*?})\s*```", text, re.DOTALL)
+    if fence_match:
+        json_str = fence_match.group(1)
+    else:
+        # 2️⃣ Fallback: scan for any dict that contains "topic"
+        best_data = None
+        idx = 0
+        while True:
+            start = text.find("{", idx)
+            if start == -1:
+                break
+            end = text.find("}", start)
+            if end == -1:
+                break
 
-    try:
-        data = json.loads(json_str)
-    except json.JSONDecodeError as e:
-        print("\n⚠️ Failed to parse Topic Scout JSON.")
-        print("Error:", e)
-        print("Raw JSON-ish string:\n", json_str)
-        # Fallback topic so pipeline can continue
-        fallback_topic = "Salesforce Flow Best Practices in 2025"
-        fallback_keyword = "Salesforce Flow best practices"
-        print(f"➡️ Falling back to topic: {fallback_topic}")
-        return fallback_topic, fallback_keyword
+            candidate_str = text[start : end + 1]
+            try:
+                candidate = json.loads(candidate_str)
+            except Exception:
+                idx = start + 1
+                continue
+
+            if isinstance(candidate, dict) and "topic" in candidate:
+                best_data = candidate
+                break
+
+            idx = start + 1
+
+        if best_data is None:
+            print("\n⚠️ Topic Scout did not return JSON with a 'topic' key.")
+            print("Raw result (truncated):\n", text[:800])
+            fallback_topic = "Salesforce Flow Best Practices in 2025"
+            fallback_keyword = "Salesforce Flow best practices"
+            print(f"➡️ Falling back to topic: {fallback_topic}")
+            return fallback_topic, fallback_keyword
+
+        data = best_data
+    # If we got JSON from the fenced block, parse it
+    if json_str is not None:
+        try:
+            data = json.loads(json_str)
+        except Exception as e:
+            print("\n⚠️ Failed to parse Topic Scout JSON from fenced block.")
+            print("Error:", e)
+            print("JSON-ish string (truncated):\n", json_str[:800])
+            fallback_topic = "Salesforce Flow Best Practices in 2025"
+            fallback_keyword = "Salesforce Flow best practices"
+            print(f"➡️ Falling back to topic: {fallback_topic}")
+            return fallback_topic, fallback_keyword
 
     topic = data.get("topic")
-    main_keyword = data.get("main_keyword") or topic
+    main_keyword = data.get("main_keyword")
+
+    if not topic:
+        print("\n⚠️ Topic missing in JSON. Falling back to default topic.")
+        topic = "Salesforce Flow Best Practices in 2025"
+    if not main_keyword:
+        main_keyword = topic
 
     print(f"✅ Chosen topic: {topic}")
     print(f"✅ Main keyword: {main_keyword}")
@@ -220,6 +255,7 @@ def pick_salesforce_topic_for_today() -> tuple[str, str]:
     print(f"🎯 Mode: {data.get('content_mode')} | Audience: {data.get('target_audience')}")
 
     return topic, main_keyword
+
 
 
 
@@ -327,25 +363,37 @@ def run_blog_pipeline(topic: str, main_keyword: str):
     print("\n🎉 DONE! Final pipeline output:\n")
     print(result)
 
+        # -------------------------------
+    # 🔎 EXTRACT FINAL ARTICLE JSON (from writer, not final crew result)
     # -------------------------------
-    # 🔎 EXTRACT FINAL ARTICLE JSON
-    # -------------------------------
-    text = str(result)
-    start = text.rfind("{")
-    end = text.rfind("}")
-    if start == -1 or end == -1 or end <= start:
-        print("\n⚠️ Could not find article JSON in the final result. Skipping WordPress posting.")
+    writer_output = write_task.output
+    print("\n🧪 DEBUG: write_task.output =\n", writer_output)
+
+    if writer_output is None:
+        print("\n⚠️ write_task.output is None. Skipping WordPress posting.")
         return result
 
-    json_str = text[start:end+1]
+    # If CrewAI already gives us a dict, use it directly
+    if isinstance(writer_output, dict):
+        raw_article = writer_output
+    else:
+        # Otherwise, parse JSON from the text
+        text = str(writer_output)
+        start = text.find("{")
+        end = text.rfind("}")
+        if start == -1 or end == -1 or end <= start:
+            print("\n⚠️ Could not find article JSON in write_task.output. Skipping WordPress posting.")
+            print("Raw writer_output (truncated):\n", text[:500])
+            return result
 
-    try:
-        raw_article = json.loads(json_str)
-    except Exception as e:
-        print("\n⚠️ Failed to parse article JSON. Skipping WordPress posting.")
-        print("Error:", e)
-        print("JSON string (truncated):\n", json_str[:500])
-        return result
+        json_str = text[start:end+1]
+        try:
+            raw_article = json.loads(json_str)
+        except Exception as e:
+            print("\n⚠️ Failed to parse article JSON from write_task.output. Skipping WordPress posting.")
+            print("Error:", e)
+            print("JSON string (truncated):\n", json_str[:500])
+            return result
 
     # ----------------------------------------
     # 🔥 SANITIZE THE ARTICLE (MANDATORY FIELDS)
@@ -379,6 +427,7 @@ def run_blog_pipeline(topic: str, main_keyword: str):
         print("Error:", e)
 
     return result
+
 
 
 
