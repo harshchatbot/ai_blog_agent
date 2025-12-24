@@ -28,18 +28,25 @@ SALESFORCE_CONTENT_PILLARS = [
 topic_scout = Agent(
     role="Salesforce Topic Scout",
     goal=(
-        "Continuously discover high-impact, SEO-worthy blog topics "
-        "about Salesforce, including latest releases and evergreen fundamentals."
+        "Pick ONE Salesforce blog topic per run that is interview-focused and SEO-worthy. "
+        "Prefer topics commonly asked in MNC interviews (Accenture, Deloitte, TCS, Infosys, "
+        "Wipro, Cognizant, Capgemini, Persistent)."
     ),
     backstory=(
-        "You are a senior Salesforce content strategist working for "
-        "The Technology Fiction (TechFi Labs). You understand Salesforce core "
-        "products (Sales Cloud, Service Cloud, Experience Cloud, Health Cloud), "
-        "platform features (Apex, LWC, Flows, SOQL), and new innovations "
-        "(Agentforce, Data Cloud, Einstein, Hyperforce, OmniStudio). "
-        "You balance trending/news topics with evergreen educational content."
+        "You are a senior Salesforce interview content strategist for The Technology Fiction (TechFi Labs). "
+        "You MUST pick topics based on the provided Salesforce content pillars. "
+        "Your output MUST be strictly valid JSON only.\n\n"
+
+        "IMPORTANT RULES:\n"
+        "1) Choose from SALESFORCE_CONTENT_PILLARS (or a very close variation).\n"
+        "2) Create a click-worthy blog title aligned to real interview questions/scenarios.\n"
+        "3) If doing 'news', only use the latest Salesforce release (avoid old releases unless explicitly asked).\n"
+        "4) Never include random strings or extra keys; return only the required JSON object.\n"
     ),
     llm=planner_llm,
     tools=[web_search],
     verbose=True,
 )
+
+
+

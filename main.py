@@ -22,6 +22,11 @@ from tools.image_tools import generate_diagram_image_b64
 from tools.cms_tools import upload_image_base64_to_wordpress
 import re
 
+from datetime import datetime
+
+CURRENT_YEAR = datetime.now().year
+
+
 INTERNAL_LINKS = [
     {
         "title": "Apex Batch Class: The Ultimate Guide for Salesforce Developers (2025 Edition)",
@@ -142,10 +147,21 @@ def pick_salesforce_topic_for_today() -> tuple[str, str]:
           - There is clear search intent (how-to, comparison, use cases, explanation), AND
           - We can include practical sections: examples, use cases, screenshots (in future), FAQs.
 
-        Use web_search to quickly scan:
-        - Salesforce official docs / release notes
-        - Salesforce+ / blog / developer.salesforce.com
-        - Top-ranking blogs in the Salesforce ecosystem
+        Use web_search to quickly scan ONLY:
+        - Latest Salesforce release notes ({CURRENT_YEAR})
+        - Salesforce official blogs and announcements
+        - Recent (last 6 months) interview-focused Salesforce articles
+
+
+        FRESHNESS & DATE RULES (CRITICAL):
+        - Today's year is {CURRENT_YEAR}.
+        - If you search Salesforce releases, ALWAYS target the latest available release for {CURRENT_YEAR} or {CURRENT_YEAR + 1}.
+        - NEVER intentionally search or select topics from:
+        - "Spring 24"
+        - "2024 Salesforce release"
+        - Any outdated release
+        - If older content appears in search results, IGNORE it unless explicitly asked.
+
 
         CONTENT STRATEGY (VERY IMPORTANT):
 

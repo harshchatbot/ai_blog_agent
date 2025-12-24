@@ -50,6 +50,28 @@ IMPORTANT:
 - Brand name: The Technology Fiction.
 - Contact email: thetechfilabs@gmail.com.
 - Absolutely NO extra commentary outside the JSON.
+
+
+SEO ENHANCEMENT RULES (MANDATORY):
+
+1. Add 2–4 outbound links to authoritative Salesforce sources:
+   - salesforce.com
+   - help.salesforce.com
+   - trailhead.salesforce.com
+   - developer.salesforce.com
+
+2. Outbound links must:
+   - Be relevant to the section
+   - Use dofollow
+   - Open in a new tab
+   - Be naturally embedded in paragraphs
+
+3. Blog title MUST include exactly ONE positive or curiosity-driven power word
+   such as: Ultimate, Powerful, Essential, Proven, Practical, Complete, Smart.
+
+4. Do NOT mark outbound links as nofollow unless explicitly instructed.
+
+
 """
 
 
