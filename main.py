@@ -18,6 +18,8 @@ import threading
 from llm_metrics import metrics
 
 from utils.sanitize_article_payload import sanitize_article_payload
+from tools.image_tools import generate_diagram_image_b64
+from tools.cms_tools import upload_image_base64_to_wordpress
 import re
 
 INTERNAL_LINKS = [
@@ -145,6 +147,30 @@ def pick_salesforce_topic_for_today() -> tuple[str, str]:
         - Salesforce+ / blog / developer.salesforce.com
         - Top-ranking blogs in the Salesforce ecosystem
 
+        CONTENT STRATEGY (VERY IMPORTANT):
+
+        This blog focuses heavily on INTERVIEW-DRIVEN and JOB-ORIENTED Salesforce topics.
+
+        You MUST select topics primarily from these pillars:
+        - Apex & Triggers (interview-focused)
+        - Async Apex (Batch, Queueable, Future)
+        - Salesforce Flows (all types & async paths)
+        - Admin security & architecture
+        - API integrations & patterns
+        - CI/CD tools (Gearset, Copado, Azure DevOps)
+        - Data migration (DBAmp)
+        - Platform Events
+        - Apex frameworks & error logging
+        - Lightning Web Components best practices
+        - Salesforce interview questions (Admin & Developer)
+        - Salesforce Agentforce questions and Data Cloud (Admin & Developer)
+
+        Prefer topics that:
+        - Are frequently asked in MNC interviews
+        - Help candidates crack Salesforce interviews
+        - Are commonly used in real production projects
+
+        
         OUTPUT FORMAT (STRICT):
         Return ONLY a JSON object, no extra text, in this structure:
 
@@ -258,6 +284,50 @@ def pick_salesforce_topic_for_today() -> tuple[str, str]:
 
 
 
+def inject_images_into_content(content_html: str) -> str:
+    """
+    Finds IMAGE placeholders, generates diagrams via OpenAI,
+    uploads to WordPress, replaces placeholders with <img>.
+    """
+    pattern = r"<!-- IMAGE:\s*(.*?)\s*-->"
+    matches = re.findall(pattern, content_html)
+
+    if not matches:
+        print("🖼 No IMAGE placeholders found. Skipping image generation.")
+        return content_html
+
+    for idx, description in enumerate(matches, start=1):
+        print(f"🖼 Generating diagram {idx}/{len(matches)}: {description}")
+
+        prompt = (
+            f"Create a clean technical DIAGRAM / FLOWCHART / INFOGRAPHIC for Salesforce explaining: {description}. "
+            "Use boxes, arrows, labels, and clear structure. White background. Flat 2D. No people. No logos/branding."
+        )
+
+        b64_img = generate_diagram_image_b64(prompt)
+
+        media = upload_image_base64_to_wordpress(
+            image_base64=b64_img,
+            filename=f"diagram-{idx}.png"
+        )
+
+        img_url = media.get("source_url")
+        if not img_url:
+            print("⚠️ Media upload succeeded but source_url missing. Skipping replacement for this image.")
+            continue
+
+        img_tag = f"""
+        <figure class="wp-block-image">
+        <img src="{img_url}" alt="{description}">
+        <figcaption>{description}</figcaption>
+        </figure>
+        """
+
+        # Replace exactly one occurrence (first match)
+        content_html = re.sub(rf"<!-- IMAGE:\s*{re.escape(description)}\s*-->", img_tag, content_html, count=1)
+
+    return content_html
+
 
 
 
@@ -288,6 +358,7 @@ def run_blog_pipeline(topic: str, main_keyword: str):
         - Use <h2> for major sections and <h3> for subsections.
         - Use <p>, <ul>, <ol>, and <strong> tags where appropriate.
         - Include a properly formatted FAQ section with 4–6 Q&A items at the end.
+        - In content_html, use \\n for new lines (so JSON stays valid).
 
         BRAND & CONTACT RULES:
         - If the article references contacting the company, always use the email: thetechfilabs@gmail.com
@@ -303,6 +374,13 @@ def run_blog_pipeline(topic: str, main_keyword: str):
         - Format them using clickable <a href="URL" target="_blank" rel="noopener noreferrer">anchor text</a>.
         - Do NOT include external links (like Salesforce docs) unless absolutely necessary.
 
+        IN-CONTENT IMAGES (VERY IMPORTANT):
+        - Insert 2–4 image placeholders inside the content_html at relevant sections.
+        - Use this exact format on its own line:
+        <!-- IMAGE: <what diagram/infographic should show> -->
+        - These must be DIAGRAMS / FLOWCHARTS / INFOGRAPHICS (not photos).
+        - Place them near the most “visual” sections (comparison tables, architecture, step-by-step flows).
+        
         OUTPUT FORMAT (STRICT):
         After writing the full HTML article, output ONLY a final JSON block with this structure:
 
@@ -315,8 +393,10 @@ def run_blog_pipeline(topic: str, main_keyword: str):
 
         VERY IMPORTANT:
         - Outside the JSON, do NOT include explanations, notes, comments, markdown, or chat text.
-        - The JSON block must be valid and parsable as JSON.
+        - The JSON block must be valid and parsable as JSON and ensure the JSON is valid (escape quotes properly).
         - content_html must contain the complete HTML article, including internal links.
+
+
     """),
     agent=seo_optimiser,
     expected_output=(
@@ -325,15 +405,42 @@ def run_blog_pipeline(topic: str, main_keyword: str):
     ),
 )
 
-    # 3) IMAGE PROMPT (we'll use later)
+    # 3) IMAGE PROMPT 
     image_task = Task(
-        description=(
-            f"Create one short prompt for generating a featured image for this topic: '{topic}'. "
-            "Return just 1–2 sentences describing a clean, minimal tech illustration."
-        ),
+        description=dedent("""
+            You will receive the previous step output as JSON containing:
+            - title
+            - slug
+            - meta_description
+            - content_html
+
+            TASK:
+            1) Parse that JSON.
+            2) Read ONLY the content_html field.
+            3) Extract every placeholder that matches:
+            <!-- IMAGE: description -->
+
+            For EACH placeholder, generate ONE prompt for a technical diagram/infographic:
+            - Must be a FLOW DIAGRAM, ARCHITECTURE DIAGRAM, PROCESS DIAGRAM, or COMPARISON INFOGRAPHIC
+            - Use labels, arrows, boxes, numbering where relevant
+            - No people, no artistic style, no logos/branding
+
+            OUTPUT JSON ONLY:
+            {
+            "images": [
+                { "description": "...", "prompt": "..." }
+            ]
+            }
+
+            If there are no placeholders, return:
+            { "images": [] }
+        """),
         agent=visual_artist,
-        expected_output="One short image prompt sentence."
-    )
+        context=[write_task],
+        expected_output="JSON with diagram prompts for each image placeholder."
+        )
+
+
 
     # 4) PUBLISH: send to WordPress as draft
     '''    publish_task = Task(
@@ -366,7 +473,7 @@ def run_blog_pipeline(topic: str, main_keyword: str):
         # -------------------------------
     # 🔎 EXTRACT FINAL ARTICLE JSON (from writer, not final crew result)
     # -------------------------------
-    writer_output = write_task.output
+    writer_output = getattr(write_task.output, "raw", write_task.output)
     print("\n🧪 DEBUG: write_task.output =\n", writer_output)
 
     if writer_output is None:
@@ -403,7 +510,7 @@ def run_blog_pipeline(topic: str, main_keyword: str):
     title = article["title"]
     slug = article["slug"]
     excerpt = article.get("meta_description") or "Salesforce article generated by AI automation."
-    content_html = article["content_html"]
+    content_html = inject_images_into_content(article["content_html"])
 
     print("\n📝 Prepared article for WordPress:")
     print(f"  Title: {title}")
